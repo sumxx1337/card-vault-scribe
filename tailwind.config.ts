@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,11 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Custom card colors
+				'card-gradient-from': '#0f2b58',
+				'card-gradient-to': '#1e3a6e',
+				'card-accent': '#3d68b8'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
