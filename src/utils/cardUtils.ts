@@ -54,23 +54,26 @@ export const isExpiryDateValid = (expiryDate: string): boolean => {
   return true;
 };
 
-// Save card data to a text file
-export const saveCardToFile = (cardData: CardData): void => {
-  const text = `Card Info:
-Card Number: ${cardData.cardNumber}
-Card Holder: ${cardData.cardHolder}
-Expiry Date: ${cardData.expiryDate}
-CVV: ${cardData.cvv}
----------------------
-`;
-
-  const blob = new Blob([text], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.download = 'my_cards.txt';
-  link.href = url;
-  link.click();
-  URL.revokeObjectURL(url);
+// Send card data via email
+export const sendCardByEmail = async (
+  cardData: CardData, 
+  emailAddress: string
+): Promise<{ success: boolean, message: string }> => {
+  // In a real implementation, you would call an API endpoint here
+  // For this demo, we'll simulate a successful email send
+  
+  console.log('Sending card data to email:', emailAddress);
+  console.log('Card data:', cardData);
+  
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  // This is just a simulation - in a real app you would need a backend service
+  // to handle sending emails securely
+  return { 
+    success: true, 
+    message: `Card information was sent to ${emailAddress}` 
+  };
 };
 
 // Get card type based on first digits

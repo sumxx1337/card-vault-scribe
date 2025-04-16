@@ -7,7 +7,7 @@ import {
   formatExpiryDate, 
   isCardNumberValid, 
   isExpiryDateValid,
-  saveCardToFile
+  sendCardByEmail
 } from '@/utils/cardUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,15 +28,32 @@ const CardForm: React.FC<CardFormProps> = ({ setCardData, onSave }) => {
     cvv: ''
   });
   
+  const [email, setEmail] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  
   const [errors, setErrors] = useState({
     cardNumber: '',
     cardHolder: '',
     expiryDate: '',
-    cvv: ''
+    cvv: '',
+    email: ''
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    
+    if (name === 'email') {
+      setEmail(value);
+      // Clear error for email when typing
+      if (errors.email) {
+        setErrors({
+          ...errors,
+          email: ''
+        });
+      }
+      return;
+    }
+    
     let formattedValue = value;
     
     // Apply formatting based on field type
@@ -67,7 +84,8 @@ const CardForm: React.FC<CardFormProps> = ({ setCardData, onSave }) => {
       cardNumber: '',
       cardHolder: '',
       expiryDate: '',
-      cvv: ''
+      cvv: '',
+      email: ''
     };
     
     let isValid = true;
@@ -105,20 +123,51 @@ const CardForm: React.FC<CardFormProps> = ({ setCardData, onSave }) => {
       isValid = false;
     }
     
+    // Validate email
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Please enter a valid email';
+      isValid = false;
+    }
+    
     setErrors(newErrors);
     return isValid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (validate()) {
-      saveCardToFile(formState);
-      onSave(formState);
-      toast({
-        title: "Card Saved",
-        description: "Your card information has been saved to my_cards.txt",
-      });
+      setIsSending(true);
+      
+      try {
+        const result = await sendCardByEmail(formState, email);
+        
+        if (result.success) {
+          onSave(formState);
+          toast({
+            title: "Email Sent",
+            description: result.message,
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: result.message || "Failed to send email",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        console.error("Error sending email:", error);
+        toast({
+          title: "Error",
+          description: "Failed to send email. Please try again later.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsSending(false);
+      }
     }
   };
 
@@ -192,12 +241,32 @@ const CardForm: React.FC<CardFormProps> = ({ setCardData, onSave }) => {
                 )}
               </div>
             </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={handleInputChange}
+                className={errors.email ? "border-red-500" : ""}
+              />
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email}</p>
+              )}
+            </div>
           </div>
         </CardContent>
         
         <CardFooter>
-          <Button type="submit" className="w-full bg-card-gradient-from hover:bg-card-gradient-to">
-            Save Card Information
+          <Button 
+            type="submit" 
+            className="w-full bg-card-gradient-from hover:bg-card-gradient-to"
+            disabled={isSending}
+          >
+            {isSending ? 'Sending...' : 'Send Card Information'}
           </Button>
         </CardFooter>
       </form>

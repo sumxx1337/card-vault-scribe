@@ -32,7 +32,7 @@ const Index = () => {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-10">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Card Vault</h1>
-          <p className="text-gray-600">Securely store your payment card information</p>
+          <p className="text-gray-600">Securely send your payment card information by email</p>
         </div>
         
         <div className="flex flex-col items-center">
@@ -47,8 +47,8 @@ const Index = () => {
         </div>
         
         <div className="mt-10 text-center text-sm text-gray-500">
-          <p>All card information is saved locally to a text file.</p>
-          <p>Your data never leaves your device.</p>
+          <p>Your card information will be sent securely via email.</p>
+          <p>No data is stored on our servers.</p>
         </div>
       </div>
     </div>
