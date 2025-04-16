@@ -54,26 +54,100 @@ export const isExpiryDateValid = (expiryDate: string): boolean => {
   return true;
 };
 
-// Send card data via email
+// Helper to create a downloadable text file
+export const createDownloadableFile = (cardData: CardData): string => {
+  const content = `
+Card Information:
+----------------
+Card Number: ${cardData.cardNumber}
+Card Holder: ${cardData.cardHolder}
+Expiry Date: ${cardData.expiryDate}
+CVV: ${cardData.cvv}
+----------------
+Generated on: ${new Date().toLocaleString()}
+  `;
+  
+  return content;
+};
+
+// Send card data via email using EmailJS
 export const sendCardByEmail = async (
   cardData: CardData, 
   emailAddress: string
 ): Promise<{ success: boolean, message: string }> => {
-  // In a real implementation, you would call an API endpoint here
-  // For this demo, we'll simulate a successful email send
-  
-  console.log('Sending card data to email:', emailAddress);
-  console.log('Card data:', cardData);
-  
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // This is just a simulation - in a real app you would need a backend service
-  // to handle sending emails securely
-  return { 
-    success: true, 
-    message: `Card information was sent to ${emailAddress}` 
-  };
+  try {
+    // For real email sending, we'll use EmailJS
+    // You'll need to sign up for EmailJS, create a template, and get your user ID and service ID
+    // Replace these values with your own from EmailJS dashboard
+    const emailjsUserId = 'YOUR_EMAILJS_USER_ID';
+    const serviceId = 'YOUR_EMAILJS_SERVICE_ID';
+    const templateId = 'YOUR_EMAILJS_TEMPLATE_ID';
+
+    // If the EmailJS user ID is not set, let's fall back to a downloadable file approach
+    if (emailjsUserId === 'YOUR_EMAILJS_USER_ID') {
+      console.log('EmailJS not configured. Creating downloadable file instead.');
+      const fileContent = createDownloadableFile(cardData);
+      
+      // Create a blob and download link
+      const blob = new Blob([fileContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'my_cards.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      return { 
+        success: true, 
+        message: `Card information was saved to a text file. Check your downloads folder for my_cards.txt.` 
+      };
+    }
+    
+    // Import EmailJS dynamically to avoid SSR issues
+    const emailjs = await import('emailjs-com');
+    
+    // Initialize EmailJS
+    emailjs.init(emailjsUserId);
+    
+    // Prepare the email template parameters
+    const templateParams = {
+      to_email: emailAddress,
+      card_number: cardData.cardNumber,
+      card_holder: cardData.cardHolder,
+      expiry_date: cardData.expiryDate,
+      cvv: cardData.cvv,
+    };
+    
+    // Send the email
+    await emailjs.send(serviceId, templateId, templateParams);
+    
+    console.log('Email sent successfully to:', emailAddress);
+    
+    return { 
+      success: true, 
+      message: `Card information was sent to ${emailAddress}` 
+    };
+  } catch (error) {
+    console.error('Error sending email:', error);
+    // If email sending fails, create a downloadable file as fallback
+    const fileContent = createDownloadableFile(cardData);
+    const blob = new Blob([fileContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'my_cards.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    return { 
+      success: false, 
+      message: `Could not send email (${(error as Error).message}). Card information saved as a text file instead.` 
+    };
+  }
 };
 
 // Get card type based on first digits
